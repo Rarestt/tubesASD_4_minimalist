@@ -40,7 +40,7 @@ Node* newNode(string data, int stok, int harga){
 	newNode->harga = harga;
 	return newNode;
 }
-
+// test change
 Node *addSibling(Node *n, string data, int stok, int harga){
 	if (n == NULL)
 		return NULL;
