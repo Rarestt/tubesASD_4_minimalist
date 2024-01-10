@@ -219,6 +219,8 @@ void filterBySubcategory(Node *root) {
     cin >> subcategory;
 
     findSubcategory(root, subcategory);
+    system("pause");
+    customer_more_action(root);
 }
 
 void get_role(Node *root), admin_action(Node *root), admin_more_action(Node *root), customer_table_picker(), customer_action(Node *root), customer_more_action(Node *root);
