@@ -143,6 +143,56 @@ void PagePelangan(Node *root){
 	}
 }
 
+void findMenu(Node *root, const string &searchItem, Node *&result) {
+    while (root != nullptr) {
+        if (root->data == searchItem) {
+            result = root;
+            break;
+        }
+
+        if (root->child != nullptr) {
+            findMenu(root->child, searchItem, result);
+            if (result != nullptr) {
+                break;
+            }
+        }
+
+        root = root->next;
+    }
+}
+
+void searchMenu(Node *root, const string &searchItem) {
+    Node *result = nullptr;
+
+    findMenu(root, searchItem, result);
+
+    if (result) {
+        cout << "Item ditemukan: " << result->data;
+        cout << ", Stok: " << result->stok;
+        cout << ", harga: " << result->harga << endl;
+
+    } else {
+        cout << "Item tidak ditemukan.\n";
+    }
+
+    system("pause");
+    customer_more_action(root);
+}
+
+void filterByMaxPrice(Node *root, int budget) {
+    if (root == nullptr) {
+        return;
+    }
+
+    if (root->harga != -1 && root->harga <= budget) {
+        cout << "Item: " << root->data;
+        cout << ", Harga: " << root->harga << endl;
+    }
+
+    filterByMaxPrice(root->child, budget);
+
+    filterByMaxPrice(root->next, budget);
+}
 
 void get_role(Node *root), admin_action(Node *root), admin_more_action(Node *root), customer_table_picker(), customer_action(Node *root), customer_more_action(Node *root);
 
@@ -209,6 +259,12 @@ int main(){
     Node *n57 = addChild(n14, " Fettucine", 7, 15000);
     Node *n58 = addChild(n14, " Carbonara", 7, 15000);
 
+	
+     //int budgetValue = 200000;
+    //filterByMaxPrice(root, budgetValue);
+	
+     //searchMenu(root, "Latte");
+	
     //synchronize meja
     for(int i=0; i<11; i++){
         cout << "Meja '" << meja[i] << "', kapasitas kursi : " << kursi[i] << endl;
