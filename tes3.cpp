@@ -143,25 +143,30 @@ void PagePelangan(Node *root){
 	}
 }
 
-void findMenu(Node *root, const string &searchItem, Node *&result) {
-    while (root != nullptr) {
-        if (root->data == searchItem) {
-            result = root;
-            break;
+void findMenu(Node *current, const string &searchItem, Node *&result) {
+    while (current != nullptr) {
+        if (current->data == searchItem) {
+            result = current;
+            break; 
         }
 
-        if (root->child != nullptr) {
-            findMenu(root->child, searchItem, result);
+        if (current->child != nullptr) {
+            findMenu(current->child, searchItem, result);
             if (result != nullptr) {
                 break;
             }
         }
 
-        root = root->next;
+        current = current->next;
     }
 }
 
-void searchMenu(Node *root, const string &searchItem) {
+void searchMenu(Node *root) {
+    string searchItem;
+    cout << "Masukkan menu yang ingin dicari: ";
+    cin.ignore();
+    getline(cin, searchItem);
+
     Node *result = nullptr;
 
     findMenu(root, searchItem, result);
@@ -169,8 +174,7 @@ void searchMenu(Node *root, const string &searchItem) {
     if (result) {
         cout << "Item ditemukan: " << result->data;
         cout << ", Stok: " << result->stok;
-        cout << ", harga: " << result->harga << endl;
-
+        cout << ", harga: " << result->harga<< endl;
     } else {
         cout << "Item tidak ditemukan.\n";
     }
@@ -192,6 +196,25 @@ void filterByMaxPrice(Node *root, int budget) {
     filterByMaxPrice(root->child, budget);
 
     filterByMaxPrice(root->next, budget);
+}
+
+
+void filterBySubcategory(Node *root) {
+    cout << "Masukkan subkategori yang ingin Anda cari: ";
+    string subcategory;
+    cin >> subcategory;
+
+    if (root == nullptr) {
+        return;
+    }
+
+    if (root->data == subcategory) {
+    traverseTree(root->child, 1);
+    return;
+    }
+	
+    filterBySubcategory(root->next);
+    filterBySubcategory(root->child);
 }
 
 void get_role(Node *root), admin_action(Node *root), admin_more_action(Node *root), customer_table_picker(), customer_action(Node *root), customer_more_action(Node *root);
@@ -403,10 +426,7 @@ void customer_action(Node *root){
             break;
 
         case SEARCH:
-        //fungsi search disini
-            cout << "mau cari apa?" << endl;
-            system("pause");
-            customer_more_action(root);
+            searchMenu(root);
             break;
 
         case FILTER_KATEGORI:
@@ -417,10 +437,7 @@ void customer_action(Node *root){
             break;
 
         case FILTER_SUBKATEGORI:
-        //fungsi filter subkategori disini
-            cout << "(hasil filter)" << endl;
-            system("pause");
-            customer_more_action(root);
+        filterBySubcategory(root);
             break;
 
         case FILTER_EVENT:
@@ -431,11 +448,11 @@ void customer_action(Node *root){
             break;
 
         case FILTER_HARGA:
-        //fungsi filter event disini
-            cout << "(hasil filter)" << endl;
-            system("pause");
-            customer_more_action(root);
-            break;
+	    int budget;
+	    cout << "Masukkan budget Anda: ";
+	    cin >> budget;
+	    filterByMaxPrice(root, budget);
+	    break;
 
         case BACK:
             system ("cls");
