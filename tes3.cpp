@@ -199,22 +199,26 @@ void filterByMaxPrice(Node *root, int budget) {
 }
 
 
-void filterBySubcategory(Node *root) {
-    cout << "Masukkan subkategori yang ingin Anda cari: ";
-    string subcategory;
-    cin >> subcategory;
-
+void findSubcategory(Node *root, const string &subcategory) {
     if (root == nullptr) {
         return;
     }
 
     if (root->data == subcategory) {
-    traverseTree(root->child, 1);
-    return;
+        traverseTree(root->child, 1);
+        return;
     }
-	
-    filterBySubcategory(root->next);
-    filterBySubcategory(root->child);
+
+    findSubcategory(root->next, subcategory);
+    findSubcategory(root->child, subcategory);
+}
+
+void filterBySubcategory(Node *root) {
+    cout << "Masukkan subkategori yang ingin anda cari: ";
+    string subcategory;
+    cin >> subcategory;
+
+    findSubcategory(root, subcategory);
 }
 
 void get_role(Node *root), admin_action(Node *root), admin_more_action(Node *root), customer_table_picker(), customer_action(Node *root), customer_more_action(Node *root);
