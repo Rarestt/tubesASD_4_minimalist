@@ -57,8 +57,8 @@ void input_all(Node *root), filterKat_Subkat(Node *root), filterHarga(Node *root
      modifySubcategory(Node* root, const string& category, const string& oldSubcategory, const string& newSubcategory),
      modifyMenuItem(Node* root, const string& category, const string& subcategory, const string& oldItem, const string& newItem),
      deleteCategory(Node* root, string category), deleteSubcategory(Node* root, const string& subcategory), deleteMenuItem(Node* root, const string& item),
-     bought_1by1(Node *root, string tujuan, int start), modifyStock(Node *root, string tujuan, int start, int newStock),
-     modifyPrice(Node *root, string tujuan, int start, int newPrice), cari_item(Node *root, string tujuan, int start);
+     bought_1by1(Node *root, string tujuan), modifyStock(Node *root, string tujuan, int newStock),
+     modifyPrice(Node *root, string tujuan, int newPrice), cari_item(Node *root, string tujuan);
 
 Node* newNode(string data, int stok, int harga);
 Node* addSibling(Node *n, string data, int stok, int harga);
@@ -69,7 +69,7 @@ Node* insertMenuItem(Node* root, const string& category, const string& subcatego
 
 int main(){
     cout << "UpperEast - ";
-    int start=0, p;
+    int p;
     //deklarasi root menu
     Node *root = newNode("MENU DAN HARGA", not_item, not_item);
 
@@ -111,14 +111,14 @@ int main(){
 
     //modify harga
     //nama item -> harga terbaru
-    // modifyPrice(root, "Apple Juice", start, 99000);
+    // modifyPrice(root, "Apple Juice", 99000);
 
     //modify stok
     //nama item -> stok terbaru
-    // modifyStock(root, "Apple Juice", start, 9);
+    // modifyStock(root, "Apple Juice", 9);
 
     //mengurangi stok satu per satu ketika ada pembelian
-    // bought_1by1(root, "Apple Juice", start);
+    // bought_1by1(root, "Apple Juice");
 
     // DELETE/MENGHAPUS
     // deleteCategory(root, "Minuman");
@@ -165,7 +165,7 @@ int main(){
     }else if(p == 7){
         string tujuan;
         cout << "Item yang ingin dicari : "; cin.ignore(); getline(cin, tujuan);
-        cari_item(root, tujuan, start);
+        cari_item(root, tujuan);
         goto begin;
     }else{
         cout << "Pilihan tidak tersedia! Silakan pilih ulang.\n";
@@ -902,68 +902,68 @@ void filterEvent(Node *root){
     }
 }
 
-void bought_1by1(Node *root, string tujuan, int start){
+void bought_1by1(Node *root, string tujuan){
     if(root == NULL)
         return;
 
     if(root->data == tujuan){
-		root->stok -=1;
+        root->stok -= 1;
         return;
     }
 
     if(root->child)
-        bought_1by1(root->child, tujuan, start + 1);
+        bought_1by1(root->child, tujuan);
 
     if(root->next)
-        bought_1by1(root->next, tujuan, start);
+        bought_1by1(root->next, tujuan);
 }
 
-void modifyStock(Node *root, string tujuan, int start, int newStock){
+void modifyStock(Node *root, string tujuan, int newStock){
     if(root == NULL)
         return;
 
     if(root->data == tujuan){
-		root->stok = newStock;
+        root->stok = newStock;
         return;
     }
 
     if(root->child)
-        modifyStock(root->child, tujuan, start + 1, newStock);
+        modifyStock(root->child, tujuan, newStock);
 
     if(root->next)
-        modifyStock(root->next, tujuan, start, newStock);
+        modifyStock(root->next, tujuan, newStock);
 }
 
-void modifyPrice(Node *root, string tujuan, int start, int newPrice){
+void modifyPrice(Node *root, string tujuan, int newPrice){
     if(root == NULL)
         return;
 
     if(root->data == tujuan){
-		root->harga = newPrice;
+        root->harga = newPrice;
         return;
     }
 
     if(root->child)
-        modifyPrice(root->child, tujuan, start + 1, newPrice);
+        modifyPrice(root->child, tujuan, newPrice);
 
     if(root->next)
-        modifyPrice(root->next, tujuan, start, newPrice);
+        modifyPrice(root->next, tujuan, newPrice);
 }
 
-void cari_item(Node *root, string tujuan, int start){
+void cari_item(Node *root, string tujuan){
     if(root == NULL)
         return;
 
     if(root->data == tujuan){
-		cout << "Item ditemukan!\n";
+        cout << "Item ditemukan!\n";
         if(root->harga >= not_item && root->stok >= not_item)
         cout << root->data << ", dengan stok : " << root->stok << " dan harga : Rp" << root->harga << ",-\n";
         return;
     }
 
     if(root->child)
-        cari_item(root->child, tujuan, start + 1);
+        cari_item(root->child, tujuan);
 
     if(root->next)
-        cari_item(root->next, tujuan, start);
+        cari_item(root->next, tujuan);
 }
