@@ -38,6 +38,8 @@ struct PriorityQueue{
 void initQueue(PriorityQueue& q);
 bool isEmpty(PriorityQueue q);
 bool isFull(PriorityQueue q);
+void allocateOrEnqueue(int level, PriorityQueue& q, int people);
+void freeTable(PriorityQueue& q, string tableId);
 void enqueue(PriorityQueue& q, int membershipLevel, TableCombination combination);
 void dequeue(PriorityQueue& q);
 void displayQueue(PriorityQueue q);
@@ -60,6 +62,7 @@ int main(){
     cout << "=== SELAMAT DATANG DI UpperEast CAFFE ===\n";
     cout << "1. Masuk Antrian\n";
     cout << "2. Tampilkan Antrian Tersortir\n";
+    cout << "3. Kosongkan Meja\n";
     cout << "pilihan : "; cin >> p;
 
     if(p == 1){
@@ -68,13 +71,67 @@ int main(){
     }else if(p == 2){
         displayQueue(queue);
         goto begin;
+    }else if(p == 3){
+        string tableId;
+        cout << "Masukkan ID Meja yang ingin dibebaskan: ";
+        cin >> tableId;
+        freeTable(queue, tableId);
+        goto begin;
     }else{
         cout << "Pilihan tidak tersedia! Silakan pilih ulang.\n";
         goto begin;
     }
 
-
     return 0;
+}
+
+void allocateOrEnqueue(PriorityQueue& q, int level, int people) {
+    TableCombination combination = findBestCombination(people);
+    if (!combination.tables.empty()) { // kalau ada meja yang tersedia
+        cout << "Alokasi meja untuk " << people << " orang: ";
+        for (int table : combination.tables) {
+            cout << "Meja " << tables[table - 1].id << ", ";
+            tables[table - 1].status = true; // update status meja menjadi terpakai (true)
+        }
+        cout << "(Total kapasitas: " << combination.totalSeats << ")\n";
+        customerQueueHandler(level, combination); // langsung aja tangani pelanggan tanpa menambahkan ke queue
+    // gada meja? masukkin ke queue
+    } else {
+        cout << "Tidak ada meja yang tersedia untuk " << people << " orang saat ini. Anda akan dimasukkan ke dalam queue.\n";
+        if (isFull(q)) {
+            cout << "Maaf, antrian penuh.\n";
+        } else {
+            // perbarui combination untuk mencerminkan kebutuhan kursi aktual sebelum masuk ke queue
+            combination.totalSeats = people; // update totalSeats dengan jumlah orang karena tidak ada kombinasi meja yang tersedia
+            enqueue(q, level, combination);
+        }
+    }
+}
+
+void freeTable(PriorityQueue& q, string tableId) {
+    for (int i = 0; i < jumlahMeja; ++i) {
+        if (tables[i].id == tableId) {
+            tables[i].status = false;
+            cout << "Meja " << tables[i].id << " telah dikosongkan.\n";
+            break;
+        }
+    }
+
+    // cek apakah ada pelanggan dalam queue yang bisa dialokasikan meja
+    if (!isEmpty(q)) {
+        Customer frontCustomer = q.data[q.front]; // Ambil pelanggan di depan queue
+        TableCombination combination = findBestCombination(frontCustomer.combination.totalSeats);
+        if (!combination.tables.empty()) { // Jika ada kombinasi meja yang tersedia
+            cout << "Mengalokasikan meja kepada pelanggan: Membership Level " << frontCustomer.membershipLevel << ", Kursi yang dibutuhkan: " << frontCustomer.combination.totalSeats << "\n";
+            for (int tableIndex : combination.tables) {
+                tables[tableIndex - 1].status = true; // update status meja menjadi terpakai
+                cout << "Meja " << tables[tableIndex - 1].id << " dialokasikan.\n";
+            }
+            dequeue(q); // mengeluarkan pelanggan dari queue setelah meja dialokasikan
+        } else {
+            cout << "Tidak ada kombinasi meja yang tersedia untuk pelanggan di depan queue.\n";
+        }
+    }
 }
 
 void initQueue(PriorityQueue& q){
@@ -93,19 +150,30 @@ bool isFull(PriorityQueue q){
 void enqueue(PriorityQueue& q, int membershipLevel, TableCombination combination) {
     if (isFull(q)) {
         cout << "Antrian Penuh." << endl;
-    } else {
-        if (isEmpty(q)) {
-            q.front = 0;
-            q.rear = 0;
-        } else {
-            q.rear = (q.rear + 1) % MAX_SIZE;
-        }
-        q.data[q.rear].membershipLevel = membershipLevel;
-        q.data[q.rear].combination = combination;
+        return;
+    }
 
-        // Update status meja menjadi true setelah diberikan kepada pelanggan
-        for (int tableIndex : combination.tables) {
-            tables[tableIndex - 1].status = true; // Meja sekarang terpakai
+    if (isEmpty(q)) {
+        q.front = 0;
+        q.rear = 0;
+    } else {
+        //naikkan rear terlebih dahulu untuk menyiapkan tempat bagi elemen baru
+        q.rear = (q.rear + 1) % MAX_SIZE;
+    }
+
+    // tempatkan elemen baru di rear antrian
+    q.data[q.rear].membershipLevel = membershipLevel;
+    q.data[q.rear].combination = combination;
+
+    // cari posisi yang tepat untuk elemen berdasarkan prioritas, jika ini bukan elemen pertama
+    if (q.rear != q.front) {
+        int i = q.rear;
+        int prev = (i - 1 + MAX_SIZE) % MAX_SIZE;
+        while (i != q.front && q.data[prev].membershipLevel > membershipLevel) {
+            //tukar elemen untuk mengurutkan berdasarkan prioritas
+            swap(q.data[i], q.data[prev]);
+            i = prev;
+            prev = (i - 1 + MAX_SIZE) % MAX_SIZE;
         }
     }
 }
@@ -113,21 +181,13 @@ void enqueue(PriorityQueue& q, int membershipLevel, TableCombination combination
 void dequeue(PriorityQueue& q) {
     if (isEmpty(q)) {
         cout << "Antrian Kosong." << endl;
+        return;
+    }
+
+    if (q.front == q.rear) { //kalau antrian hanya memiliki satu elemen
+        initQueue(q);
     } else {
-        // Ambil data pelanggan di depan
-        Customer customer = q.data[q.front];
-
-        // Perbarui status meja yang dipesan pelanggan
-        for (int tableIndex : customer.combination.tables) {
-            tables[tableIndex - 1].status = false; // Meja kembali tersedia
-        }
-
-        // Update indeks front
-        if (q.front == q.rear) {
-            initQueue(q); // Jika hanya ada satu elemen
-        } else {
-            q.front = (q.front + 1) % MAX_SIZE;
-        }
+        q.front = (q.front + 1) % MAX_SIZE;
     }
 }
 
@@ -202,15 +262,19 @@ void input_kebutuhan_kursi(int level, PriorityQueue& q) {
 }
 
 void ask_member_and_chair_needle(PriorityQueue& q) {
-    int level;
+    int level, people;
     cout << "\nPilih level membership\n1. Platinum\n2. Gold\n3. Silver\n4. Non-Membership\nLevel Anda: ";
     cin >> level;
 
     if (level <= 0 || level > 4) {
         cout << "Level membership tidak valid, silakan pilih ulang\n";
-    } else {
-        input_kebutuhan_kursi(level, q);
+        return;
     }
+
+    cout << "Kapasitas kursi yang dibutuhkan: ";
+    cin >> people;
+
+    allocateOrEnqueue(q, level, people);
 }
 
 void customerQueueHandler(int level, TableCombination combination){
