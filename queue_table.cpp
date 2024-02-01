@@ -9,13 +9,13 @@ struct TableCombination{
     int totalSeats;
 };
 
-// Array of struct meja
 struct Table {
     string id;
     int seats;
     bool status; // Status meja, true jika sedang digunakan
 };
 
+// Array of struct meja
 const int jumlahMeja = 11;
 Table tables[jumlahMeja] = {
     {"1", 6, false}, {"2", 6, false}, {"3", 4, false}, {"4", 4, false},
@@ -102,9 +102,13 @@ void enqueue(PriorityQueue& q, int membershipLevel, TableCombination combination
         }
         q.data[q.rear].membershipLevel = membershipLevel;
         q.data[q.rear].combination = combination;
+
+        // Update status meja menjadi true setelah diberikan kepada pelanggan
+        for (int tableIndex : combination.tables) {
+            tables[tableIndex - 1].status = true; // Meja sekarang terpakai
+        }
     }
 }
-
 
 void dequeue(PriorityQueue& q) {
     if (isEmpty(q)) {
@@ -154,20 +158,19 @@ TableCombination findBestCombination(int people) {
     for (int i = 0; i < (1 << jumlahMeja); ++i) {
         int seats = 0;
         vector<int> currentCombination;
-
-        for (int k = 0; k < jumlahMeja; ++k) {
-            tables[k].status = false; // Reset status meja
-        }
+        bool isValidCombination = true;
 
         for (int j = 0; j < jumlahMeja; ++j) {
-            if (i & (1 << j)) {
+            if ((i & (1 << j)) && !tables[j].status) { // Hanya memilih meja yang belum terpakai
                 seats += tables[j].seats;
                 currentCombination.push_back(j + 1); // Simpan indeks meja + 1
-                tables[j].status = true;
+            } else if ((i & (1 << j)) && tables[j].status) {
+                isValidCombination = false; // Jika salah satu meja dalam kombinasi sudah terpakai, tandai kombinasi ini tidak valid
+                break; // Keluar dari loop karena kombinasi ini tidak valid
             }
         }
 
-        if (seats >= people && seats < minSeats) {
+        if (isValidCombination && seats >= people && seats < minSeats) {
             minSeats = seats;
             bestCombination.tables = currentCombination;
             bestCombination.totalSeats = seats;
